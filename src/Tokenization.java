@@ -28,7 +28,7 @@ public class Tokenization {
         addEOFToken();
         //MakeTokens();
         for(Token token : tokens){
-            System.out.print(token);
+            System.out.print(token.getTokenType()+"("+token.getValue()+")"+", ");
         }
 
     }

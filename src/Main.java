@@ -18,7 +18,8 @@ public class Main {
         }
 
         Tokenization tokenization = new Tokenization(lines);
-        Parser parser = new Parser(tokenization);
+        Table table = new Table();
+        Parser parser = new Parser(tokenization, table);
 
 
 

@@ -1,3 +1,4 @@
+import TableSymbols.Symbol;
 import Tokens.*;
 
 import java.util.ArrayList;
@@ -5,12 +6,16 @@ import java.util.List;
 
 public class Parser {
     private List<Token> tokens = new ArrayList<Token>();
+    Table symbolTable;
     private int currentToken = 0;
-    public Parser(Tokenization tokenization) {
-        tokens = tokenization.getTokens();
+    public Parser(Tokenization tokenization, Table symbolTable) {
+        this.symbolTable = symbolTable;
+        this.tokens = tokenization.getTokens();
         System.out.println();
         System.out.println();
         System.out.println(parse());
+        System.out.println();
+        this.symbolTable.printTable();
     }
     public void nextToken(){
         currentToken++;
@@ -50,12 +55,17 @@ public class Parser {
 
     //[1] Program = {Statement}.
     public boolean isProgram(){
+        symbolTable.enterScope();
         while(!tokens.get(currentToken).getClass().equals(EOFToken.class)){
             isStatement();
             if (tokens.get(currentToken).getClass().equals(EOFToken.class)){
+                symbolTable.printTable();
+                symbolTable.exitScope();
                 return true;
             }
         }
+        symbolTable.printTable();
+        symbolTable.exitScope();
         return false;
     }
     //[2] Statement = [Expression] ';'.
@@ -111,27 +121,34 @@ public class Parser {
     //[7] PrimaryExpression = Ident ['=' Expression] | '~' PrimaryExpression | '++' Ident | '--' Ident | Ident '++' | Ident '--' |
     //                        Number | PrintFunc | ScanfFunc | '(' Expression ')'.
     public boolean isPrimaryExpression(){
+
         if(checkIdent()){
+            String identName = tokens.get(currentToken - 1).getValue();
             if (checkSpecialSymbol("=")){
+                symbolTable.addSymbol(identName, "int",null);
                 return isExpression();
+            }
+            if ((checkSpecialSymbol("++") || checkSpecialSymbol("--"))){
+                Symbol symbol = symbolTable.getSymbol(identName);
+                if (symbol == null) {
+                    System.out.println("Error: Undefined identifier " + identName);
+                }
+                return true;
             }
             return true;
         }
         if (checkSpecialSymbol("~")){
             return isPrimaryExpression();
         }
-        if (checkSpecialSymbol("++")){
+        if (checkSpecialSymbol("++") || checkSpecialSymbol("--")){
+            String identName = tokens.get(currentToken - 1).getValue();
+            Symbol symbol = symbolTable.getSymbol(identName);
+            if (symbol == null) {
+                System.out.println("Error: Undefined identifier " + identName);
+            }
             return checkIdent();
         }
-        if (checkSpecialSymbol("--")){
-            return checkIdent();
-        }
-        if (checkIdent()){
-            return checkSpecialSymbol("++");
-        }
-        if(checkIdent()){
-            return checkSpecialSymbol("--");
-        }
+
         if (checkNumber()){
             return true;
         }
