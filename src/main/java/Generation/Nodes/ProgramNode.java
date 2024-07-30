@@ -16,7 +16,10 @@ public class ProgramNode extends ASTNode {
     }
     @Override
     public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting ProgramNode");
         visitor.visit(this);
+    }
+    @Override
+    public String getName() {
+        return "Program";
     }
 }

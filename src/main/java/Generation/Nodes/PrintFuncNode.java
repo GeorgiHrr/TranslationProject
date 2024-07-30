@@ -16,7 +16,11 @@ public class PrintFuncNode extends ExpressionNode{
 
     @Override
     public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting PrintFuncNode");
         visitor.visit(this);
+    }
+
+    @Override
+    public String getName() {
+        return "PrintFunc";
     }
 }

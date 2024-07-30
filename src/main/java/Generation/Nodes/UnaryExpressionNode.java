@@ -26,7 +26,11 @@ public class UnaryExpressionNode extends ExpressionNode{
 
     @Override
     public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting UnaryExpressionNode with operator: " + operator);
         visitor.visit(this);
+    }
+
+    @Override
+    public String getName() {
+        return "UnaryExp";
     }
 }

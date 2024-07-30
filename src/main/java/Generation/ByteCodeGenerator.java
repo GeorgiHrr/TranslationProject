@@ -1,104 +1,163 @@
 package Generation;
-
 import Generation.Nodes.*;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import Main.Table;
+import org.objectweb.asm.util.TraceClassVisitor;
 
-import java.sql.SQLOutput;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ByteCodeGenerator implements ASTVisitor{
-    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-    MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+    final private String className = "Program";
+    List<String> localVariables;
+    Table symbolTable;
+    ClassWriter cw;
+    MethodVisitor mv;
+    //PrintWriter printWriter;
+    //TraceClassVisitor tcv;
+    public ByteCodeGenerator(Table symbolTable) {
+        this.symbolTable = symbolTable;
+        this.localVariables = new ArrayList<>();
+        fillVariablesFromTable();
+        this.cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        //this.printWriter = new PrintWriter(System.out,true);
+        //this.tcv = new TraceClassVisitor(cw, printWriter);
+        this.cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, className, null, "java/lang/Object", null);
+        this.mv = this.cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "main", "([Ljava/lang/String;)V",null,null);
+        this.mv.visitCode();
+
+        mv.visitLdcInsn(0);
+        this.mv.visitVarInsn(Opcodes.ISTORE, 1);
+        mv.visitLdcInsn(0);
+        this.mv.visitVarInsn(Opcodes.ISTORE, 2);
+        mv.visitLdcInsn(0);
+        this.mv.visitVarInsn(Opcodes.ISTORE, 3);
+    }
+
     public void visit(ProgramNode node) {
-        System.out.println("Generating bytecode for ProgramNode");
-        System.out.println();
-        cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, "Program", null, "java/lang/Object", null);
         for (StatementNode stmt : node.getStatements()) {
             stmt.accept(this);
         }
+
+        mv.visitInsn(Opcodes.RETURN);
+        mv.visitEnd();
+        mv.visitMaxs(2, 4);
         cw.visitEnd();
+
+        System.out.println("Inputs:");
+        byte[] bytecode = cw.toByteArray();
+        ByteArrayClassLoader loader = new ByteArrayClassLoader();
+        Class<?> test = loader.defineClass(className, bytecode);
+        try {
+            test.getMethod("main", String[].class).invoke(null, (Object) new String[0]);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void visit(StatementNode node) {
-        System.out.println("Generating bytecode for StatementNode");
-        System.out.println();
         if (node.getExpression() != null) {
             node.getExpression().accept(this);
         }
-        mv.visitInsn(Opcodes.NOP);
-        // Code generation for statement (e.g., append semicolon in bytecode)
-
     }
 
     @Override
     public void visit(BinaryExpressionNode node) {
-        System.out.println("Generating bytecode for BinaryExpressionNode with operator: " + node.getLeft() + node.getOperator() + node.getRight());
-        System.out.println();
         node.getLeft().accept(this);
         node.getRight().accept(this);
-        // Code generation for binary operation (e.g., ADD, SUB, etc.) Left operator Right
-        if (node.getOperator().equals("=")){
 
-        }
         if (node.getOperator().equals("+")){
-
+            mv.visitInsn(Opcodes.IADD);
         }
         if (node.getOperator().equals("-")){
-
+            mv.visitInsn(Opcodes.ISUB);
         }
         if (node.getOperator().equals("*")){
-
+            mv.visitInsn(Opcodes.IMUL);
         }
         if (node.getOperator().equals("/")){
-
+            mv.visitInsn(Opcodes.IDIV);
         }
         if (node.getOperator().equals("%")){
-
+            mv.visitInsn(Opcodes.IREM);
         }
         if (node.getOperator().equals("|")){
-
+            mv.visitInsn(Opcodes.IOR);
         }
         if (node.getOperator().equals("&")){
-
+            mv.visitInsn(Opcodes.IAND);
+        }
+        if (node.getOperator().equals("=")){
+            mv.visitVarInsn(Opcodes.ISTORE, getVariableIndex(node.getLeft().getName()));
         }
     }
 
     @Override
     public void visit(UnaryExpressionNode node) {
-        System.out.println("Generating bytecode for UnaryExpressionNode with operator: " + node.getOperator() + node.getExpression().toString());
-        System.out.println();
         node.getExpression().accept(this);
-        // Generate bytecode for unary operation (e.g., NEGATE)
+
+        if (node.getOperator().equals("++")){
+            mv.visitIincInsn(getVariableIndex(node.getExpression().getName()),1);
+        }
+        if (node.getOperator().equals("--")){
+            mv.visitIincInsn(getVariableIndex(node.getExpression().getName()),-1);
+        }
+        if (node.getOperator().equals("~")){
+            mv.visitInsn(Opcodes.IXOR);
+        }
     }
 
     @Override
     public void visit(IdentNode node) {
-        System.out.println("Generating bytecode for IdentNode with name: " + node.getName());
-        System.out.println();
-        // Code generation for identifier (e.g., load variable)
+        mv.visitVarInsn(Opcodes.ILOAD, getVariableIndex(node.getName()));
     }
 
     @Override
     public void visit(NumberNode node) {
-        System.out.println("Generating bytecode for NumberNode with value: " + node.getValue());
-        System.out.println();
-        // Code generation for number (e.g., push constant)
+        mv.visitLdcInsn(Integer.parseInt(node.getValue()));
+
     }
 
     @Override
     public void visit(PrintFuncNode node) {
-        System.out.println("Generating bytecode for PrintFuncNode");
-        System.out.println();
         node.getExpression().accept(this);
-        // Code generation for printf function
+        // Print integer
+        mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        mv.visitInsn(Opcodes.SWAP);
+        //mv.visitVarInsn(Opcodes.ILOAD, getVariableIndex(node.getExpression().getName()));
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
     }
 
     @Override
     public void visit(ScanfFuncNode node) {
-        System.out.println("Generating bytecode for ScanfFuncNode");
-        System.out.println();
-        // Code generation for scanf function
+        // Create Scanner object
+        mv.visitTypeInsn(Opcodes.NEW, "java/util/Scanner");
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "in", "Ljava/io/InputStream;");
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/Scanner", "<init>", "(Ljava/io/InputStream;)V", false);
+        mv.visitVarInsn(Opcodes.ASTORE, 0);
+
+        // Read integer
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false);
+        //mv.visitVarInsn(Opcodes.ISTORE, 1);
+    }
+
+
+    private int getVariableIndex(String varName) {
+        for (int i = 0; i < localVariables.size(); i++) {
+            if (varName.equals(localVariables.get(i))){
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+    private void fillVariablesFromTable(){
+        localVariables = symbolTable.getAllSymbolNames();
     }
 }

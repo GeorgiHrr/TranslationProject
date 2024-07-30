@@ -1,3 +1,5 @@
+package Main;
+
 import Tokens.*;
 
 import java.util.ArrayList;
@@ -27,9 +29,9 @@ public class Tokenization {
         createToken();
         addEOFToken();
         //MakeTokens();
-        for(Token token : tokens){
-            System.out.print(token.getTokenType()+"("+token.getValue()+")"+", ");
-        }
+//        for(Token token : tokens){
+//            System.out.print(token.getTokenType()+"("+token.getValue()+")"+", ");
+//        }
 
     }
 

@@ -15,7 +15,11 @@ public class NumberNode extends ExpressionNode{
 
     @Override
     public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting NumberNode with value: " + value);
         visitor.visit(this);
+    }
+
+    @Override
+    public String getName() {
+        return "Number";
     }
 }

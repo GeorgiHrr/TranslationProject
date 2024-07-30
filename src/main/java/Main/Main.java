@@ -1,9 +1,12 @@
+package Main;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 
         Scanner input = new Scanner(System.in);
         List<String> lines = new ArrayList<String>();

@@ -1,3 +1,5 @@
+package Main;
+
 import Generation.ASTNode;
 import Generation.ASTVisitor;
 import Generation.ByteCodeGenerator;
@@ -5,6 +7,8 @@ import Generation.Nodes.*;
 import TableSymbols.Symbol;
 import Tokens.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,17 +16,12 @@ public class Parser {
     private List<Token> tokens = new ArrayList<Token>();
     Table symbolTable;
     private int currentToken = 0;
-    public Parser(Tokenization tokenization, Table symbolTable) {
+    public Parser(Tokenization tokenization, Table symbolTable){
         this.symbolTable = symbolTable;
         this.tokens = tokenization.getTokens();
-        System.out.println();
         ProgramNode program = parse();
-        ASTVisitor visitor = new ByteCodeGenerator();
+        ASTVisitor visitor = new ByteCodeGenerator(this.symbolTable);
         program.accept(visitor);
-        //System.out.println(parse());
-        System.out.println();
-        this.symbolTable.printTable();
-        System.out.println();
         symbolTable.exitScope();
     }
     public void nextToken(){
@@ -63,7 +62,6 @@ public class Parser {
 
     //[1] Program = {Statement}.
     public ProgramNode isProgram(){
-        System.out.println("Parsing Program");
         symbolTable.enterScope();
         List<StatementNode> statements = new ArrayList<>();
         while(!tokens.get(currentToken).getClass().equals(EOFToken.class)){
@@ -72,16 +70,13 @@ public class Parser {
                 statements.add(stmn);
             }
             if (tokens.get(currentToken).getClass().equals(EOFToken.class)){
-                System.out.println();
                 return new ProgramNode(statements);
             }
         }
-        System.out.println();
         return new ProgramNode(statements);
     }
     //[2] Statement = [Expression] ';'.
     public StatementNode isStatement(){
-        System.out.println("Parsing Statement");
         ASTNode expr = isExpression();
         if(expr != null){
             if(checkSpecialSymbol(";")){
@@ -97,7 +92,6 @@ public class Parser {
     }
     //[3] Expression = BitwiseAndExpression {'|' BitwiseAndExpression}.
     public ExpressionNode isExpression(){
-        System.out.println("Parsing Expression");
         ExpressionNode expr = isBitwiseAndExpression();
         while(checkSpecialSymbol("|")){
             ExpressionNode right = isBitwiseAndExpression();
@@ -107,7 +101,6 @@ public class Parser {
     }
     //[4] BitwiseAndExpression = AdditiveExpression {'&' AdditiveExpression}.
     public ExpressionNode isBitwiseAndExpression(){
-        System.out.println("Parsing BitwiseAndExpression");
         ExpressionNode expr = isAdditiveExpression();
         while(checkSpecialSymbol("&")){
             ExpressionNode right = isAdditiveExpression();
@@ -117,7 +110,6 @@ public class Parser {
     }
     //[5] AdditiveExpression = MultiplicativeExpression {('+' | '-') MultiplicativeExpression}.
     public ExpressionNode isAdditiveExpression(){
-        System.out.println("Parsing AdditiveExpression");
         ExpressionNode expr = isMultiplicativeExpression();
         while(checkSpecialSymbol("+") || checkSpecialSymbol("-")){
             String operator = tokens.get(currentToken - 1).getValue();
@@ -128,7 +120,6 @@ public class Parser {
     }
     //[6] MultiplicativeExpression = PrimaryExpression {('*' | '/' | '%') PrimaryExpression}.
     public ExpressionNode isMultiplicativeExpression(){
-        System.out.println("Parsing MultiplicativeExpression");
         ExpressionNode expr = isPrimaryExpression();
         while(checkSpecialSymbol("*") || checkSpecialSymbol("/") || checkSpecialSymbol("%")){
             String operator = tokens.get(currentToken - 1).getValue();
@@ -140,7 +131,6 @@ public class Parser {
     //[7] PrimaryExpression = Ident ['=' Expression] | '~' PrimaryExpression | '++' Ident | '--' Ident | Ident '++' | Ident '--' |
     //                        Number | PrintFunc | ScanfFunc | '(' Expression ')'.
     public ExpressionNode isPrimaryExpression(){
-        System.out.println("Parsing PrimaryExpression");
         if(checkIdent()){
             String identName = tokens.get(currentToken - 1).getValue();
             if (checkSpecialSymbol("=")){

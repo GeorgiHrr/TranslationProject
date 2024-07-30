@@ -17,7 +17,11 @@ public class StatementNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting StatementNode");
         visitor.visit(this);
+    }
+
+    @Override
+    public String getName() {
+        return "Statement";
     }
 }

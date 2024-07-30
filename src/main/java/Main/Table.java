@@ -1,6 +1,10 @@
+package Main;
+
 import TableSymbols.Symbol;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
 
 public class Table {
@@ -50,5 +54,17 @@ public class Table {
                 System.out.println(entry.getValue().toString());
             }
         }
+    }
+    public HashMap<String, Symbol> getElement(int Index){
+        return symbolTable.get(Index);
+    }
+
+    public List<String> getAllSymbolNames() {
+        ArrayList<String> symbolNames = new ArrayList<>();
+        for (int i = 1; i < symbolTable.size(); i++) {
+            HashMap<String, Symbol> scope = symbolTable.get(i);
+            symbolNames.addAll(scope.keySet());
+        }
+        return symbolNames;
     }
 }

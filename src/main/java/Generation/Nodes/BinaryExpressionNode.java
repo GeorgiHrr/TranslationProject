@@ -26,7 +26,12 @@ public class BinaryExpressionNode extends ExpressionNode{
 
     @Override
     public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting BinaryExpressionNode with operator: " + operator);
         visitor.visit(this);
     }
+
+    @Override
+    public String getName() {
+        return "BinaryExp";
+    }
+
 }

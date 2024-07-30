@@ -9,13 +9,13 @@ public class IdentNode extends ExpressionNode{
         this.name = name;
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
-    public void accept(ASTVisitor visitor) {
-        System.out.println("Visiting IdentNode with name: " + name);
-        visitor.visit(this);
+    public String getName() {
+        return this.name;
     }
 }
