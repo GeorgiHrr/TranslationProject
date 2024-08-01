@@ -1,40 +1,35 @@
 package Main;
 
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public static void main(String[] args) throws IOException {
+        try{
+            List<String> lines = new ArrayList<String>();
 
-        Scanner input = new Scanner(System.in);
-        List<String> lines = new ArrayList<String>();
-        String lineNew;
-        while (input.hasNextLine()) {
-            lineNew = input.nextLine();
-            if (lineNew.isEmpty()) {
-                break;
+            File file = new File("C:\\Users\\Georgi\\IdeaProjects\\testin\\src\\main\\java\\Main\\xample.txt");
+            BufferedReader br = new BufferedReader(new FileReader(file.getAbsolutePath()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+                lines.add(line);
             }
-            //System.out.println(lineNew);
-            lines.add(lineNew);
+
+            Tokenization tokenization = new Tokenization(lines);
+            Table table = new Table();
+            Parser parser = new Parser(tokenization, table);
+
         }
-
-        Tokenization tokenization = new Tokenization(lines);
-        Table table = new Table();
-        Parser parser = new Parser(tokenization, table);
-
-
-
-
-
-
-
-
-
-
-
-
+        catch (FileNotFoundException e){
+            System.out.println(e);
+        }
+        catch (IOException e){
+            System.out.println(e);
+        }
 
 
 //        System.out.println();
@@ -43,12 +38,5 @@ public class Main {
 //            System.out.println(string);
 //        }
 
-
-
-        //It reads each character in the line. https://www.geeksforgeeks.org/iterate-over-the-characters-of-a-string-in-java/
-//        for (int i = 0; i < lines.get(0).length(); i++) {
-//            // Print current character
-//            System.out.print(lines.get(0).charAt(i) + " ");
-//        }
     }
 }

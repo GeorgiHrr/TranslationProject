@@ -60,7 +60,6 @@ public class Tokenization {
         }
     }
 
-
     public void createToken(){
         while(isReading){
             //Checking if it's and Ident or a Keyword Token
