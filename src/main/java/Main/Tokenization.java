@@ -28,10 +28,11 @@ public class Tokenization {
         ch = this.lines.get(row).charAt(col);
         createToken();
         addEOFToken();
-        //MakeTokens();
+
 //        for(Token token : tokens){
 //            System.out.print(token.getTokenType()+"("+token.getValue()+")"+", ");
 //        }
+//        System.out.println();
 
     }
 
@@ -39,7 +40,7 @@ public class Tokenization {
         return tokens;
     }
 
-    public void readNextChar(){
+    private void readNextChar(){
         col++;
         goToNextLine();
         if(row >= lines.size()){
@@ -49,18 +50,18 @@ public class Tokenization {
         }
         ch = lines.get(row).charAt(col);
     }
-    public void addEOFToken(){
+    private void addEOFToken(){
         tokens.add(new EOFToken("FIN"));
     }
 
-    public void goToNextLine(){
+    private void goToNextLine(){
         if(col == lines.get(row).length()){
             row++;
             col = 0;
         }
     }
 
-    public void createToken(){
+    private void createToken(){
         while(isReading){
             //Checking if it's and Ident or a Keyword Token
             if (ch>='a' && ch<='z' || ch>='A' && ch<='Z' || ch=='_') {
@@ -106,21 +107,14 @@ public class Tokenization {
                     resetBuilder();
                 }
             }
-
-//            if(specialSymbols.contains(Character.toString(ch))){
-//                buildString(ch);
-//                readNextChar();
-//                tokens.add(new SpecialSymbolToken(str.toString()));
-//                resetBuilder();
-//            }
         }
     }
 
-    public void buildString(char character){
+    private void buildString(char character){
         str.append(character);
     }
 
-    public void resetBuilder(){
+    private void resetBuilder(){
         str.setLength(0);
     }
 }

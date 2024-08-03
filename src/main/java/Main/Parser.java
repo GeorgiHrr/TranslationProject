@@ -24,44 +24,44 @@ public class Parser {
         program.accept(visitor);
         symbolTable.exitScope();
     }
-    public void nextToken(){
+    private void nextToken(){
         currentToken++;
     }
 
-    public boolean checkIdent(){
+    private boolean checkIdent(){
         if (tokens.get(currentToken) instanceof IdentToken){
             nextToken();
             return true;
         }
         return false;
     }
-    public boolean checkKeyword(String keyword){
+    private boolean checkKeyword(String keyword){
         if (tokens.get(currentToken) instanceof KeywordToken && tokens.get(currentToken).getValue().equals(keyword)){
             nextToken();
             return true;
         }
         return false;
     }
-    public boolean checkNumber(){
+    private boolean checkNumber(){
         if (tokens.get(currentToken) instanceof NumberToken){
             nextToken();
             return true;
         }
         return false;
     }
-    public boolean checkSpecialSymbol(String specialSymbol){
+    private boolean checkSpecialSymbol(String specialSymbol){
         if (tokens.get(currentToken) instanceof SpecialSymbolToken && tokens.get(currentToken).getValue().equals(specialSymbol)){
             nextToken();
             return true;
         }
         return false;
     }
-    public ProgramNode parse(){
+    private ProgramNode parse(){
         return isProgram();
     }
 
     //[1] Program = {Statement}.
-    public ProgramNode isProgram(){
+    private ProgramNode isProgram(){
         symbolTable.enterScope();
         List<StatementNode> statements = new ArrayList<>();
         while(!tokens.get(currentToken).getClass().equals(EOFToken.class)){
@@ -76,13 +76,13 @@ public class Parser {
         return new ProgramNode(statements);
     }
     //[2] Statement = [Expression] ';'.
-    public StatementNode isStatement(){
+    private StatementNode isStatement(){
         ASTNode expr = isExpression();
         if(expr != null){
             if(checkSpecialSymbol(";")){
                 return new StatementNode(expr);
             } else{
-                System.out.println("Error: Missing semicolon");
+                throw new Error("Error: Missing semicolon");
             }
         }
         if(checkSpecialSymbol(";")){
@@ -91,7 +91,7 @@ public class Parser {
         return null;
     }
     //[3] Expression = BitwiseAndExpression {'|' BitwiseAndExpression}.
-    public ExpressionNode isExpression(){
+    private ExpressionNode isExpression(){
         ExpressionNode expr = isBitwiseAndExpression();
         while(checkSpecialSymbol("|")){
             ExpressionNode right = isBitwiseAndExpression();
@@ -100,7 +100,7 @@ public class Parser {
         return expr;
     }
     //[4] BitwiseAndExpression = AdditiveExpression {'&' AdditiveExpression}.
-    public ExpressionNode isBitwiseAndExpression(){
+    private ExpressionNode isBitwiseAndExpression(){
         ExpressionNode expr = isAdditiveExpression();
         while(checkSpecialSymbol("&")){
             ExpressionNode right = isAdditiveExpression();
@@ -109,7 +109,7 @@ public class Parser {
         return expr;
     }
     //[5] AdditiveExpression = MultiplicativeExpression {('+' | '-') MultiplicativeExpression}.
-    public ExpressionNode isAdditiveExpression(){
+    private ExpressionNode isAdditiveExpression(){
         ExpressionNode expr = isMultiplicativeExpression();
         while(checkSpecialSymbol("+") || checkSpecialSymbol("-")){
             String operator = tokens.get(currentToken - 1).getValue();
@@ -119,7 +119,7 @@ public class Parser {
         return expr;
     }
     //[6] MultiplicativeExpression = PrimaryExpression {('*' | '/' | '%') PrimaryExpression}.
-    public ExpressionNode isMultiplicativeExpression(){
+    private ExpressionNode isMultiplicativeExpression(){
         ExpressionNode expr = isPrimaryExpression();
         while(checkSpecialSymbol("*") || checkSpecialSymbol("/") || checkSpecialSymbol("%")){
             String operator = tokens.get(currentToken - 1).getValue();
@@ -130,7 +130,7 @@ public class Parser {
     }
     //[7] PrimaryExpression = Ident ['=' Expression] | '~' PrimaryExpression | '++' Ident | '--' Ident | Ident '++' | Ident '--' |
     //                        Number | PrintFunc | ScanfFunc | '(' Expression ')'.
-    public ExpressionNode isPrimaryExpression(){
+    private ExpressionNode isPrimaryExpression(){
         if(checkIdent()){
             String identName = tokens.get(currentToken - 1).getValue();
             if (checkSpecialSymbol("=")){
@@ -141,7 +141,7 @@ public class Parser {
             if ((checkSpecialSymbol("++") || checkSpecialSymbol("--"))){
                 Symbol symbol = symbolTable.getSymbol(identName);
                 if (symbol == null) {
-                    System.out.println("Error: Undefined identifier " + identName);
+                    throw new Error("Error: Undefined identifier " + identName);
                 }
                 return new UnaryExpressionNode(new IdentNode(identName), tokens.get(currentToken - 1).getValue());
             }
@@ -155,7 +155,7 @@ public class Parser {
             String identName = tokens.get(currentToken - 1).getValue();
             Symbol symbol = symbolTable.getSymbol(identName);
             if (symbol == null) {
-                System.out.println("Error: Undefined identifier " + identName);
+                throw new Error("Error: Undefined identifier " + identName);
             }
             checkIdent();
             return new UnaryExpressionNode(tokens.get(currentToken - 1).getValue(), new IdentNode(identName));
@@ -169,7 +169,11 @@ public class Parser {
                 ExpressionNode expr = isExpression();
                 if (checkSpecialSymbol(")")){
                     return new PrintFuncNode(expr);
+                }else{
+                    throw new Error("Error: missing closing bracket");
                 }
+            }else{
+                throw new Error("Error: missing opening bracket");
             }
         }
         if (isScanfFunc()){
@@ -184,7 +188,7 @@ public class Parser {
         return null;
     }
     //[8] PrintFunc = 'printf' '(' Expression ')'.
-    public boolean isPrintFunc(){
+    private boolean isPrintFunc(){
         if(checkKeyword("printf")){
             if(checkSpecialSymbol("(")){
                 isExpression();
@@ -194,9 +198,13 @@ public class Parser {
         return false;
     }
     //[9] ScanfFunc = 'scanf' '(' ')'.
-    public boolean isScanfFunc(){
+    private boolean isScanfFunc(){
         if (checkKeyword("scanf")){
-            return checkSpecialSymbol("(") && checkSpecialSymbol(")");
+            if(checkSpecialSymbol("(") && checkSpecialSymbol(")")){
+                return true;
+            }else{
+                throw new Error("Error: missing bracket");
+            }
         }
         return false;
     }

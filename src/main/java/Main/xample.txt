@@ -1,13 +1,17 @@
 A = scanf();
 B = A*2;
 printf(B);
+
+
 A = scanf();
 B = scanf();
 printf(A+B);
+
 A = scanf();
 B = scanf();
 C = (A*A+B*B)*2;
 printf(C);
+
 A = scanf();
 B = scanf();
 A++;

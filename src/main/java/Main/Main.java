@@ -12,11 +12,13 @@ public class Main {
             List<String> lines = new ArrayList<String>();
 
             File file = new File("C:\\Users\\Georgi\\IdeaProjects\\testin\\src\\main\\java\\Main\\xample.txt");
-            BufferedReader br = new BufferedReader(new FileReader(file.getAbsolutePath()));
+            BufferedReader reader = new BufferedReader(new FileReader(file.getAbsolutePath()));
             String line;
-            while ((line = br.readLine()) != null) {
-                System.out.println(line);
-                lines.add(line);
+            while ((line = reader.readLine()) != null) {
+                if(line.length() > 0) {
+                    System.out.println(line);
+                    lines.add(line);
+                }
             }
 
             Tokenization tokenization = new Tokenization(lines);

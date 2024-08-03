@@ -15,7 +15,7 @@ public class Table {
         enterScope();
         addPredefinedSymbols();
     }
-    public void addPredefinedSymbols(){
+    private void addPredefinedSymbols(){
         addSymbol("int", "type", null);
         addSymbol("printf", "func", null);
         addSymbol("scanf", "func", null);
