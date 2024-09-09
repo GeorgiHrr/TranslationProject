@@ -13,16 +13,16 @@ import java.util.List;
 
 public class ByteCodeGenerator implements ASTVisitor{
     final private String className = "Program";
-    List<String> localVariables;
-    Table symbolTable;
-    ClassWriter cw;
-    MethodVisitor mv;
+    private List<String> localVariables;
+    private Table symbolTable;
+    private ClassWriter cw;
+    private MethodVisitor mv;
     //PrintWriter printWriter;
     //TraceClassVisitor tcv;
     public ByteCodeGenerator(Table symbolTable) {
         this.symbolTable = symbolTable;
         this.localVariables = new ArrayList<>();
-        fillVariablesFromTable();
+        this.fillVariablesFromTable();
         this.cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         //this.printWriter = new PrintWriter(System.out,true);
         //this.tcv = new TraceClassVisitor(cw, printWriter);
@@ -30,12 +30,10 @@ public class ByteCodeGenerator implements ASTVisitor{
         this.mv = this.cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "main", "([Ljava/lang/String;)V",null,null);
         this.mv.visitCode();
 
-        mv.visitLdcInsn(0);
-        this.mv.visitVarInsn(Opcodes.ISTORE, 1);
-        mv.visitLdcInsn(0);
-        this.mv.visitVarInsn(Opcodes.ISTORE, 2);
-        mv.visitLdcInsn(0);
-        this.mv.visitVarInsn(Opcodes.ISTORE, 3);
+        for (int i = 0; i <= localVariables.size(); i++){
+            this.mv.visitLdcInsn(0);
+            this.mv.visitVarInsn(Opcodes.ISTORE, i+1);
+        }
     }
 
     public void visit(ProgramNode node) {
@@ -120,7 +118,6 @@ public class ByteCodeGenerator implements ASTVisitor{
     @Override
     public void visit(NumberNode node) {
         mv.visitLdcInsn(Integer.parseInt(node.getValue()));
-
     }
 
     @Override
@@ -158,6 +155,6 @@ public class ByteCodeGenerator implements ASTVisitor{
         return 0;
     }
     private void fillVariablesFromTable(){
-        localVariables = symbolTable.getAllSymbolNames();
+        this.localVariables = this.symbolTable.getAllSymbolNames();
     }
 }

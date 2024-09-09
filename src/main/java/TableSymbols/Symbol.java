@@ -2,8 +2,8 @@ package TableSymbols;
 
 public class Symbol {
     private String name;
-    private String type; // This can be 'int', 'func', 'keyword', etc.
-    private String value; // The value of the identifier, if any (for variables)
+    private String type;
+    private String value;
 
     public Symbol(String name, String type, String value) {
         this.name = name;

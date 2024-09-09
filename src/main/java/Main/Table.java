@@ -17,8 +17,6 @@ public class Table {
     }
     private void addPredefinedSymbols(){
         addSymbol("int", "type", null);
-        addSymbol("printf", "func", null);
-        addSymbol("scanf", "func", null);
     }
     // Enters a scope by pushing a HashMap where symbols are stored;
     public void enterScope(){

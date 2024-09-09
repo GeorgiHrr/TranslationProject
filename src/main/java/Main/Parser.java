@@ -7,8 +7,6 @@ import Generation.Nodes.*;
 import TableSymbols.Symbol;
 import Tokens.*;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +20,7 @@ public class Parser {
         ProgramNode program = parse();
         ASTVisitor visitor = new ByteCodeGenerator(this.symbolTable);
         program.accept(visitor);
-        symbolTable.exitScope();
+        this.symbolTable.exitScope();
     }
     private void nextToken(){
         currentToken++;
@@ -57,15 +55,15 @@ public class Parser {
         return false;
     }
     private ProgramNode parse(){
-        return isProgram();
+        return parseProgram();
     }
 
     //[1] Program = {Statement}.
-    private ProgramNode isProgram(){
+    private ProgramNode parseProgram(){
         symbolTable.enterScope();
         List<StatementNode> statements = new ArrayList<>();
         while(!tokens.get(currentToken).getClass().equals(EOFToken.class)){
-            StatementNode stmn = isStatement();
+            StatementNode stmn = parseStatement();
             if (stmn != null){
                 statements.add(stmn);
             }
@@ -76,8 +74,8 @@ public class Parser {
         return new ProgramNode(statements);
     }
     //[2] Statement = [Expression] ';'.
-    private StatementNode isStatement(){
-        ASTNode expr = isExpression();
+    private StatementNode parseStatement(){
+        ASTNode expr = parseExpression();
         if(expr != null){
             if(checkSpecialSymbol(";")){
                 return new StatementNode(expr);
@@ -91,51 +89,51 @@ public class Parser {
         return null;
     }
     //[3] Expression = BitwiseAndExpression {'|' BitwiseAndExpression}.
-    private ExpressionNode isExpression(){
-        ExpressionNode expr = isBitwiseAndExpression();
+    private ExpressionNode parseExpression(){
+        ExpressionNode expr = parseBitwiseAndExpression();
         while(checkSpecialSymbol("|")){
-            ExpressionNode right = isBitwiseAndExpression();
+            ExpressionNode right = parseBitwiseAndExpression();
             expr = new BinaryExpressionNode(expr,"|",right);
         }
         return expr;
     }
     //[4] BitwiseAndExpression = AdditiveExpression {'&' AdditiveExpression}.
-    private ExpressionNode isBitwiseAndExpression(){
-        ExpressionNode expr = isAdditiveExpression();
+    private ExpressionNode parseBitwiseAndExpression(){
+        ExpressionNode expr = parseAdditiveExpression();
         while(checkSpecialSymbol("&")){
-            ExpressionNode right = isAdditiveExpression();
+            ExpressionNode right = parseAdditiveExpression();
             expr = new BinaryExpressionNode(expr,"&",right);
         }
         return expr;
     }
     //[5] AdditiveExpression = MultiplicativeExpression {('+' | '-') MultiplicativeExpression}.
-    private ExpressionNode isAdditiveExpression(){
-        ExpressionNode expr = isMultiplicativeExpression();
+    private ExpressionNode parseAdditiveExpression(){
+        ExpressionNode expr = parseMultiplicativeExpression();
         while(checkSpecialSymbol("+") || checkSpecialSymbol("-")){
             String operator = tokens.get(currentToken - 1).getValue();
-            ExpressionNode right = isMultiplicativeExpression();
+            ExpressionNode right = parseMultiplicativeExpression();
             expr = new BinaryExpressionNode(expr,operator,right);
         }
         return expr;
     }
     //[6] MultiplicativeExpression = PrimaryExpression {('*' | '/' | '%') PrimaryExpression}.
-    private ExpressionNode isMultiplicativeExpression(){
-        ExpressionNode expr = isPrimaryExpression();
+    private ExpressionNode parseMultiplicativeExpression(){
+        ExpressionNode expr = parsePrimaryExpression();
         while(checkSpecialSymbol("*") || checkSpecialSymbol("/") || checkSpecialSymbol("%")){
             String operator = tokens.get(currentToken - 1).getValue();
-            ExpressionNode right = isPrimaryExpression();
+            ExpressionNode right = parsePrimaryExpression();
             expr = new BinaryExpressionNode(expr, operator, right);
         }
         return expr;
     }
     //[7] PrimaryExpression = Ident ['=' Expression] | '~' PrimaryExpression | '++' Ident | '--' Ident | Ident '++' | Ident '--' |
     //                        Number | PrintFunc | ScanfFunc | '(' Expression ')'.
-    private ExpressionNode isPrimaryExpression(){
+    private ExpressionNode parsePrimaryExpression(){
         if(checkIdent()){
             String identName = tokens.get(currentToken - 1).getValue();
             if (checkSpecialSymbol("=")){
                 symbolTable.addSymbol(identName, "int",null);
-                ExpressionNode expr = isExpression();
+                ExpressionNode expr = parseExpression();
                 return new BinaryExpressionNode(new IdentNode(identName), "=", expr);
             }
             if ((checkSpecialSymbol("++") || checkSpecialSymbol("--"))){
@@ -148,7 +146,7 @@ public class Parser {
             return new IdentNode(identName);
         }
         if (checkSpecialSymbol("~")){
-            ExpressionNode expr = isPrimaryExpression();
+            ExpressionNode expr = parsePrimaryExpression();
             return new UnaryExpressionNode("~", expr);
         }
         if (checkSpecialSymbol("++") || checkSpecialSymbol("--")){
@@ -166,7 +164,7 @@ public class Parser {
         }
         if (checkKeyword("printf")){
             if(checkSpecialSymbol("(")){
-                ExpressionNode expr = isExpression();
+                ExpressionNode expr = parseExpression();
                 if (checkSpecialSymbol(")")){
                     return new PrintFuncNode(expr);
                 }else{
@@ -180,7 +178,7 @@ public class Parser {
             return new ScanfFuncNode();
         }
         if(checkSpecialSymbol("(")){
-            ExpressionNode expr = isExpression();
+            ExpressionNode expr = parseExpression();
             if (checkSpecialSymbol(")")){
                 return expr;
             }
@@ -191,7 +189,7 @@ public class Parser {
     private boolean isPrintFunc(){
         if(checkKeyword("printf")){
             if(checkSpecialSymbol("(")){
-                isExpression();
+                parseExpression();
                 return checkSpecialSymbol(")");
             }
         }
